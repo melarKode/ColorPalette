@@ -1,5 +1,7 @@
 const getPixels = require("get-pixels");
 const _ = require("lodash");
+const PNG = require("pngjs").PNG;
+const fs = require("fs");
 
 class Pixel {
 	static get DEFAULT_DEPTH() {
@@ -17,6 +19,35 @@ class Pixel {
 				resolve(Pixel._convertPixelsToRGB(pixels));
 			});
 		});
+	}
+
+	static load_pixels_redraw(image) {
+		return new Promise((resolve, reject) => {
+			getPixels(image, (err, pixels) => {
+				if (err) {
+					reject(err);
+				}
+				resolve(Pixel._convertPixelsToRGBA(pixels));
+			});
+		});
+	}
+
+	static _convertPixelsToRGBA(pixels) {
+		const width = pixels.shape[0];
+		const height = pixels.shape[1];
+		var rgb = [];
+		for (var i = 0; i < height; i++) {
+			for (var j = 0; j < width; j++) {
+				var index = (j + i * width) * 4;
+				rgb.push({
+					r: pixels.data[index],
+					g: pixels.data[index + 1],
+					b: pixels.data[index + 2],
+					index,
+				});
+			}
+		}
+		return { rgb, width, height };
 	}
 
 	static _convertPixelsToRGB(pixels) {
@@ -239,6 +270,24 @@ class Pixel {
 			nm += 1;
 		}
 		return c;
+	}
+
+	static draw(center, width, height) {
+		var png = new PNG({
+			width,
+			height,
+			filterType: -1,
+		});
+		center.forEach((v) => {
+			v["points"].forEach((p) => {
+				var idx = p["index"];
+				png.data[idx] = v["center"].r;
+				png.data[idx + 1] = v["center"].g;
+				png.data[idx + 2] = v["center"].b;
+				png.data[idx + 3] = 255;
+			});
+		});
+		png.pack().pipe(fs.createWriteStream("newOut.png"));
 	}
 }
 module.exports = Pixel;

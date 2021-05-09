@@ -2,6 +2,7 @@
   "dependencies": {
     "get-pixels": "^3.3.2",
     "lodash": "^4.17.21",
+    "pngjs": "^3.4.0",
     "yargs": "^17.0.1"
   }
 }
